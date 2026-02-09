@@ -1,5 +1,7 @@
 pipeline {
-    agent any
+    agent {
+        label 'cicd'
+    }
 
     tools {
         jdk 'Java17'
@@ -9,7 +11,7 @@ pipeline {
     environment {
         APP_NAME        = "demo-app"
         IMAGE_TAG       = "latest"
-        DOCKERHUB_USER  = "<dockerhub-username>"
+        DOCKERHUB_USER  = "<YOUR_DOCKERHUB_USERNAME>"
         IMAGE_FULL_NAME = "docker.io/${DOCKERHUB_USER}/${APP_NAME}:${IMAGE_TAG}"
     }
 
@@ -64,7 +66,6 @@ pipeline {
     post {
         success {
             echo "✅ Build, Push & Deploy successful"
-            echo "🚀 Image: ${IMAGE_FULL_NAME}"
         }
         failure {
             echo "❌ Pipeline failed"
