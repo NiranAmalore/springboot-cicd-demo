@@ -6,8 +6,15 @@ pipeline {
         maven 'Maven'
     }
 
+    environment {
+        APP_NAME   = "demo-app"
+        IMAGE_TAG  = "1.0"
+        IMAGE_NAME = "${APP_NAME}:${IMAGE_TAG}"
+    }
+
     stages {
-        stage('Checkout Code') {
+
+        stage('Checkout Source Code') {
             steps {
                 checkout scm
             }
@@ -15,17 +22,39 @@ pipeline {
 
         stage('Build with Maven') {
             steps {
-                sh 'mvn clean package'
+                sh '''
+                    mvn clean package
+                '''
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh '''
+                    docker build -t $IMAGE_NAME .
+                '''
+            }
+        }
+
+        stage('Verify Docker Image') {
+            steps {
+                sh '''
+                    docker images | grep $APP_NAME
+                '''
             }
         }
     }
 
     post {
         success {
-            echo 'Build successful 🎉'
+            echo "✅ Pipeline completed successfully"
+            echo "🐳 Docker Image: ${IMAGE_NAME}"
         }
         failure {
-            echo 'Build failed ❌'
+            echo "❌ Pipeline failed"
+        }
+        always {
+            cleanWs()
         }
     }
 }
