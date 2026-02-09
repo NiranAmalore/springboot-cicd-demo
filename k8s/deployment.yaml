@@ -14,8 +14,7 @@ spec:
     spec:
       containers:
         - name: demo-app
-          image: docker.io/<dockerhub-username>/demo-app:latest
+          image: docker.io/<YOUR_DOCKERHUB_USERNAME>/demo-app:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
-  
