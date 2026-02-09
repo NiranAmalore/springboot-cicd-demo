@@ -11,7 +11,7 @@ pipeline {
     environment {
         APP_NAME        = "demo-app"
         IMAGE_TAG       = "latest"
-        DOCKERHUB_USER  = "<YOUR_DOCKERHUB_USERNAME>"
+        DOCKERHUB_USER  = "niranamalore"
         IMAGE_FULL_NAME = "docker.io/${DOCKERHUB_USER}/${APP_NAME}:${IMAGE_TAG}"
     }
 
