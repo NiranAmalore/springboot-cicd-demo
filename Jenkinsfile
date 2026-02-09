@@ -7,14 +7,15 @@ pipeline {
     }
 
     environment {
-        APP_NAME   = "demo-app"
-        IMAGE_TAG  = "1.0"
-        IMAGE_NAME = "${APP_NAME}:${IMAGE_TAG}"
+        APP_NAME        = "demo-app"
+        IMAGE_TAG       = "latest"
+        DOCKERHUB_USER  = "<dockerhub-username>"
+        IMAGE_FULL_NAME = "docker.io/${DOCKERHUB_USER}/${APP_NAME}:${IMAGE_TAG}"
     }
 
     stages {
 
-        stage('Checkout Source Code') {
+        stage('Checkout Source') {
             steps {
                 checkout scm
             }
@@ -22,24 +23,39 @@ pipeline {
 
         stage('Build with Maven') {
             steps {
-                sh '''
-                    mvn clean package
-                '''
+                sh 'mvn clean package'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-                    docker build -t $IMAGE_NAME .
-                '''
+                sh 'docker build -t $IMAGE_FULL_NAME .'
             }
         }
 
-        stage('Verify Docker Image') {
+        stage('Push Image to Docker Hub') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
+                    sh '''
+                      echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                      docker push $IMAGE_FULL_NAME
+                      docker logout
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
             steps {
                 sh '''
-                    docker images | grep $APP_NAME
+                  kubectl apply -f k8s/deployment.yaml
+                  kubectl apply -f k8s/service.yaml
                 '''
             }
         }
@@ -47,8 +63,8 @@ pipeline {
 
     post {
         success {
-            echo "✅ Pipeline completed successfully"
-            echo "🐳 Docker Image: ${IMAGE_NAME}"
+            echo "✅ Build, Push & Deploy successful"
+            echo "🚀 Image: ${IMAGE_FULL_NAME}"
         }
         failure {
             echo "❌ Pipeline failed"
